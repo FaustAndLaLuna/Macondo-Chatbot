@@ -26,14 +26,13 @@ def respond():
         for _, row in df.iterrows():
             distances = embeddings_utils.distances_from_embeddings(embeddings, row['embeddings'])
             distances = sorted(distances)
-            print(f'{distances[0]},{distances[1]}')
             if distances[0] < 0.12:
-                recommendations.append({'handle':row['Handle'], 'title':row['Title'], 'img_src':row['Image_Src']})
+                recommendations.append({'handle':row['Handle'], 'title':row['Title'], 'img_src':row['Image_Src'], 'distance':distances[0]})
+        recommendations = sorted(recommendations, key= lambda r:r['distance'])
         if len(recommendations) > 3:
             response['recommendations'] = recommendations[0:3]
         else:
             response['recommendations'] = recommendations
-        print(recommendations)
 
     return json.dumps(response)
 

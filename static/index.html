@@ -43,6 +43,9 @@
                 transform: translateY(-50%);
                 font-size: 20px;
             }
+            .chatResponseDiv::-webkit-scrollbar{
+                display: none;
+            }
             .chatResponseDiv{
                 position: absolute;
                 left: 0;
@@ -54,6 +57,7 @@
                 flex-direction: column-reverse;
                 overflow-y: scroll;
                 z-index: 1;
+                scrollbar-width: none;
             }
             .chatResponse{
                 position: relative;
