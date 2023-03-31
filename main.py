@@ -40,4 +40,4 @@ def respond():
 if __name__ == '__main__':
     df = pickle.load(open('products_final.pck', 'rb'))
 
-    app.run(debug = True)
+    app.run(host='0.0.0.0', port=80)
