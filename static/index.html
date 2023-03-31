@@ -142,7 +142,7 @@
                         response.querySelector('.chatRecommendationTitle').textContent = rec['title'];
                         response.querySelector('img').src = rec['img_src'];
                         for(el of response.querySelectorAll('a')){
-                            el.href = rec[`https://macondo-shop.com/products/${rec['handle']}`]
+                            el.href = `https://macondo-shop.com/products/${rec['handle']}`
                         }
                         responseDiv = document.querySelector('#chatResponseDiv');
                         firstChild = responseDiv.firstChild;
