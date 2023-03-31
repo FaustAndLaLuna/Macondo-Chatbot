@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            .chatSilvestre{
+                position:absolute;
+                bottom: 5%;
+                right: 10%;
+                height: 700px;
+                width: 550px;
+            }
+            .silvestre{
+                position: absolute;
+                bottom: 0;
+                width: 100%;
+            }
+            .silvestre img{
+                position: absolute;
+                bottom: 0;
+                right: 0;
+                width: 65%;
+            }
+            #chatForm{
+                width: 60%;
+                position: absolute;
+                left: 0;
+                bottom: 100px;
+            }
+            #chatQuestion{
+                height: 50px;
+                border: solid black 1px;
+                width: 90%;
+                margin-left: 10%;
+                padding-left: 15px;
+                border-radius: 6px;
+            }
+            #chatSubmit{
+                background: none;
+                border: none;
+                position: absolute;
+                top: 50%;
+                right: 0px;
+                transform: translateY(-50%);
+                font-size: 20px;
+            }
+            .chatResponseDiv{
+                position: absolute;
+                left: 0;
+                top: 0;
+                height: 465px;
+                width: 400px;
+                background: none;
+                display: flex;
+                flex-direction: column-reverse;
+                overflow-y: scroll;
+                z-index: 1;
+            }
+            .chatResponse{
+                position: relative;
+                display: inline-block;
+                margin-bottom: 28px;
+            }
+            .chatAnswer{
+                position: absolute;
+                top: 0;
+                left: 0;
+                margin: 20px 55px;
+                transform: rotate(-8deg) rotateY(-3deg) rotateX(2deg);
+            }
+            .chatResponseRecommendation{
+                padding: 27px 30px 20px 30px;
+                background: white;
+                width: 190px;
+                margin: 0px 28px 36px 28px;
+            }
+            .chatResponseRecommendation img{
+                width: 100%;
+            }
+        </style>
+        
+    </head>
+    <body style="background-color: tan;">
+        <div class="chatResponse" style="display: none;" id="chatResponseTemplate">
+            <image src="/static/chatDialogueBubble.svg"></image>
+            <div class="chatAnswer">
+                <p class="chatQuestionText" style="font-weight:bold;color:#2eb475;">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Consequuntur quidem doloremque, dolore dignissimos quos itaque </p>
+                <p class="chatAnswerText">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Consequuntur quidem doloremque, dolore dignissimos quos itaque </p>
+            </div>
+        </div>
+        <div class="chatResponseRecommendation" id="chatResponseRecommendationTemplate" style="display:none;">
+            <p style="display: inline-block;color:#2eb475; margin: -5px -5px 8px;">Te recomiendo de la tienda de Macondo:</p>
+            <a class="chatRecommendationTitle" style="font-weight:bold;color:#2eb475; margin:-5px 0px 20px;" href="/">Lorem Ipsum Dolor Sit</p>
+            <a href="/"><img src='https://cdn.shopify.com/s/files/1/0493/0351/9384/products/MACONDO72.1.jpg?v=1639363346'></a>
+        </div>
+        <div class="chatSilvestre">
+            <div class="chatResponseDiv" id="chatResponseDiv">
+            </div>
+            <div class="silvestre">
+                <image src="/static/chatSprite.svg"></image>
+            </div>
+            <div id="chatForm">
+                <input type="text" name="chatQuestion" id="chatQuestion" rows="3" cols="50">
+                <button id="chatSubmit" onclick="chatSubmit()"> > </button>
+            </div>
+        </div>
+        <script>
+            var chatHistory = [{'question':'', 'answer':''},{'question':'', 'answer':''},{'question':'', 'answer':''},{'question':'', 'answer':''},{'question':'', 'answer':''}]
+            var chatCounter = 0;
+
+            var isChatActive = true;
+
+            const chatResponseTemplate = document.querySelector('#chatResponseTemplate');
+            const chatRecommendationResponseTemplate = document.querySelector('#chatResponseRecommendationTemplate');
+            const chatInput = document.getElementById("chatQuestion");
+            const debouncedChatSubmit = debounce(chatSubmit, 300);
+
+
+            chatInput.addEventListener("keypress", function(event) {
+            if (event.keyCode == 13) {
+                debouncedChatSubmit();
+            }
+            });
+
+            function addToChat(question, answer){
+                response = chatResponseTemplate.cloneNode(true);
+                response.removeAttribute('style');
+                response.removeAttribute('id');
+                response.querySelector('.chatQuestionText').textContent = question;
+                response.querySelector('.chatAnswerText').textContent = answer;
+                responseDiv = document.querySelector('#chatResponseDiv');
+                firstChild = responseDiv.firstChild;
+                responseDiv.insertBefore(response, firstChild);
+            }
+
+            function addRecommendationsToChat(recommendations, answer){
+                for(let i = 0; i < recommendations.length; i++){
+                    setTimeout(() => {
+                        rec = recommendations[i];
+                        response = chatRecommendationResponseTemplate.cloneNode(true);
+                        response.removeAttribute('style');
+                        response.removeAttribute('id');
+                        response.querySelector('.chatRecommendationTitle').textContent = rec['title'];
+                        response.querySelector('img').src = rec['img_src'];
+                        for(el of response.querySelectorAll('a')){
+                            el.href = rec[`https://macondo-shop.com/products/${rec['handle']}`]
+                        }
+                        responseDiv = document.querySelector('#chatResponseDiv');
+                        firstChild = responseDiv.firstChild;
+                        responseDiv.insertBefore(response, firstChild);
+                    }, (2000 + (i * 400)))
+                }
+                
+            }
+
+            function chatSubmit(){
+                if (! isChatActive){
+                    return;
+                }
+                isChatActive = false;
+                question = document.querySelector('#chatQuestion').value;
+                document.querySelector('#chatSubmit').setAttribute('disabled', 'disabled');
+                chatInput.value = '';
+
+                fetch(  '/chatSilvestre',{
+                        method: 'POST',
+                        headers: {
+                            'Content-Type' : 'application/json',
+                        },
+                        body: JSON.stringify({'question':question, 'history':chatHistory})
+                }).then((res) =>{res.json().then( (data) => {
+                    chatHistory[chatCounter % 5]['question'] = question; 
+                    chatHistory[chatCounter++ % 5]['answer'] = data['answer'];
+                    addToChat(question, data['answer']);
+                    addRecommendationsToChat(data['recommendations'], data['answer']);
+                    document.querySelector('#chatSubmit').removeAttribute('disabled');
+                    isChatActive = true;
+                })})
+            }
+
+            function debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+        </script>
+    </body>
+</html>
